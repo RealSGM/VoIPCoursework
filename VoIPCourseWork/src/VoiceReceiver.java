@@ -23,8 +23,9 @@ public class VoiceReceiver implements Runnable {
 
     @Override
     public void run() {
-        AudioPlayer player;
 
+        // Initialize AudioPlayer
+        AudioPlayer player;
         try {
             player = new AudioPlayer();
 
@@ -32,6 +33,7 @@ public class VoiceReceiver implements Runnable {
             throw new RuntimeException(e);
         }
 
+        // Initialize DatagramSocket for receiving voice data
         try {
             receivingSocket = new DatagramSocket(port);
         } catch (SocketException e) {
@@ -47,6 +49,7 @@ public class VoiceReceiver implements Runnable {
             try {
                 receivingSocket.receive(packet);
 
+                // Extract authentication key from received packet
                 ByteBuffer buffer = ByteBuffer.wrap(packet.getData(), packet.getOffset(), packet.getLength());
                 short authKey = buffer.getShort();
 
@@ -55,9 +58,11 @@ public class VoiceReceiver implements Runnable {
                     byte[] remainingBytes = new byte[buffer.remaining()];
                     buffer.get(remainingBytes);
 
+                    // Initialize ByteBuffer for decryption
                     ByteBuffer unwrapDecrypt = ByteBuffer.allocate(remainingBytes.length);
                     ByteBuffer cipherText = ByteBuffer.wrap(remainingBytes);
 
+                    // Decrypting the received audio block using XOR operation with the encryption key
                     for (int j = 0; j < remainingBytes.length / 4; j++) {
                         int fourByte = cipherText.getInt();
                         fourByte = fourByte ^ encryptionKey; // XOR decrypt
@@ -65,6 +70,7 @@ public class VoiceReceiver implements Runnable {
                     }
                     byte[] decryptedBlock = unwrapDecrypt.array();
 
+                    // Play the decrypted audio block
                     player.playBlock(decryptedBlock);
                 }
 
