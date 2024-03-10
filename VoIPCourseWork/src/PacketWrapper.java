@@ -1,10 +1,12 @@
 public class PacketWrapper implements Comparable<PacketWrapper>{
-    long timestamp;
-    byte[] data;
+    final long timestamp;
+    final int sequenceNumber;
+    final byte[] data;
 
-    public PacketWrapper(long timestamp, byte[] data) {
+    public PacketWrapper(long timestamp, byte[] data, int num) {
         this.timestamp = timestamp;
         this.data = data;
+        this.sequenceNumber = num;
     }
 
     public long getTimestamp() {

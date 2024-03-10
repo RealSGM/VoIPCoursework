@@ -27,6 +27,7 @@ public class PacketBlock {
 
     /**
      * Interleaves the packets in the block.
+     * Note: This implementation assumes that all packets have the same length.
      */
     public void interleavePackets() {
         int maxLength = packets.stream().mapToInt(arr -> arr.length).max().orElse(0);

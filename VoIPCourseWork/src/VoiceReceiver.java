@@ -52,7 +52,7 @@ public class VoiceReceiver implements Runnable {
         boolean running = true;
 
         while (running) {
-            byte[] encryptedBlock = new byte[522];
+            byte[] encryptedBlock = new byte[526];
             DatagramPacket packet = new DatagramPacket(encryptedBlock, encryptedBlock.length);
 
             try {
@@ -60,6 +60,7 @@ public class VoiceReceiver implements Runnable {
                 receivingSocket.receive(packet);
                 ByteBuffer buffer = ByteBuffer.wrap(packet.getData(), packet.getOffset(), packet.getLength());
                 short authKey = buffer.getShort();
+                int sequenceNumber = buffer.getInt();
                 long timestamp = buffer.getLong();
 
                 // Check authentication key
@@ -69,7 +70,7 @@ public class VoiceReceiver implements Runnable {
                     buffer.get(remainingBytes);
 
                     // Add packet to processor buffer
-                    processor.addToBuffer(timestamp, remainingBytes);
+                    processor.addToBuffer(timestamp, remainingBytes, sequenceNumber);
                 }
             } catch (IOException e) {
                 throw new RuntimeException(e);

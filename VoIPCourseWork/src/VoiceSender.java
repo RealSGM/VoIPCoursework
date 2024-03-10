@@ -12,17 +12,20 @@ import java.net.SocketException;
 import java.nio.ByteBuffer;
 import java.time.Instant;
 
-/**
- * This class represents a voice sender that sends audio data over UDP.
- */
+//This class represents a voice sender that sends audio data over UDP.
 public class VoiceSender implements Runnable {
+
     private final int socketNum;
-    DatagramSocket sendingSocket;
     int port;
     InetAddress ip;
+    DatagramSocket sendingSocket;
+
     int encryptionKey = 15;
     short authenticationKey = 10;
-    boolean running = true;
+    int sequenceNumber = 0;
+    double breakTime = 5;
+    int packetsPerSecond = 128;
+    long elapsedTime = System.currentTimeMillis();
 
     /**
      * Constructs a VoiceSender object with the specified parameters.
@@ -60,32 +63,37 @@ public class VoiceSender implements Runnable {
      */
     @Override
     public void run() {
-        while (running) {
-            try {
-                AudioRecorder recorder = new AudioRecorder(); // Creating an AudioRecorder instance
-                int recordTime = 9999; // Record time in seconds
-                PacketBlock packetBlock = new PacketBlock();
+        PacketBlock packetBlock = new PacketBlock();
+        long startTime = System.currentTimeMillis();
+        boolean running = true;
 
-                // Iterate over each block of audio data
-                for (int i = 0; i < Math.ceil(recordTime / 0.016); i++) {
-                    byte[] block = recorder.getBlock();
-                    byte[] encryptedPacket = encryptPacket(block);
+        try {
+            AudioRecorder recorder = new AudioRecorder();
 
-                    // For socket 3, add packets to a block and send the block when it's full
-                    if (socketNum == 3) {
-                        packetBlock.addPacket(encryptedPacket);
-                        if (packetBlock.getPackets().size() == 16) {
-                            sendPacketBlock(packetBlock);
-                            packetBlock = new PacketBlock(); // Create a new block
-                        }
-                    } else {
-                        DatagramPacket packet = new DatagramPacket(encryptedPacket, encryptedPacket.length, ip, port);
-                        sendingSocket.send(packet);
+            while (running) {
+                elapsedTime = System.currentTimeMillis() - startTime;
+                if (elapsedTime > breakTime * 1000) {
+                    running = false;
+                }
+
+                byte[] block = recorder.getBlock();
+                byte[] encryptedPacket = encryptPacket(block);
+
+                if (socketNum != 3) {
+                    sendPacket(encryptedPacket);
+                } else {
+                    packetBlock.addPacket(encryptedPacket);
+                    if (packetBlock.getPackets().size() == 16) {
+                        sendPacketBlock(packetBlock);
+                        packetBlock = new PacketBlock();
                     }
                 }
-            } catch (LineUnavailableException | IOException e) {
-                throw new RuntimeException(e);
             }
+
+            System.out.printf("Packets Sent: %d. %n", sequenceNumber);
+            System.out.println("Bitrate: " + (sequenceNumber * 526 / (elapsedTime / 1000)));
+        } catch (LineUnavailableException | IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -108,10 +116,12 @@ public class VoiceSender implements Runnable {
         byte[] encryptedBlock = unwrapEncrypt.array();
 
         // Creating a ByteBuffer for the voice packet
-        ByteBuffer voicePacket = ByteBuffer.allocate(522);
+        ByteBuffer voicePacket = ByteBuffer.allocate(526);
         voicePacket.putShort(authenticationKey); // Adding authentication key
+        voicePacket.putInt(sequenceNumber);
         voicePacket.putLong(Instant.now().toEpochMilli());
         voicePacket.put(encryptedBlock); // Adding encrypted audio data
+        sequenceNumber++;
 
         return voicePacket.array();
     }
@@ -124,8 +134,12 @@ public class VoiceSender implements Runnable {
      */
     private void sendPacketBlock(PacketBlock packetBlock) throws IOException {
         for (byte[] packetData : packetBlock.getPackets()) {
-            DatagramPacket packet = new DatagramPacket(packetData, packetData.length, ip, port);
-            sendingSocket.send(packet);
+            sendPacket(packetData);
         }
+    }
+
+    private void sendPacket(byte[] packetData) throws IOException {
+        DatagramPacket packet = new DatagramPacket(packetData, packetData.length, ip, port);
+        sendingSocket.send(packet);
     }
 }

@@ -11,8 +11,9 @@ import java.util.concurrent.PriorityBlockingQueue;
 public class VoiceProcessor implements Runnable {
 
     private final PriorityBlockingQueue<PacketWrapper> packetBuffer = new PriorityBlockingQueue<>();
-    private AudioPlayer player;
     private final int socketNum;
+    private AudioPlayer player;
+    private PacketWrapper lastPacket;
 
     /**
      * Constructs a VoiceProcessor object with the specified socket number.
@@ -35,17 +36,18 @@ public class VoiceProcessor implements Runnable {
         }
 
         // Continuous processing loop
-        while (true) {
-            // Process packets if there are at least two packets in the buffer
-            if (packetBuffer.size() >= 2) {
-                try {
-                    PacketWrapper firstPacket = packetBuffer.take(); // Take the first packet from the buffer
-                    processAudio(firstPacket); // Process the first packet
-                } catch (IOException | InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        }
+         while (true) {
+             // Process packets if there are at least two packets in the buffer
+             if (packetBuffer.size() >= 1) {
+                 try {
+                     PacketWrapper firstPacket = packetBuffer.take(); // Take the first packet from the buffer
+                     processAudio(firstPacket); // Process the first packet
+                 } catch (IOException | InterruptedException e) {
+                     throw new RuntimeException(e);
+                 }
+             }
+         }
+
     }
 
     /**
@@ -54,8 +56,8 @@ public class VoiceProcessor implements Runnable {
      * @param timestamp The timestamp of the packet.
      * @param packet    The packet data.
      */
-    public void addToBuffer(long timestamp, byte[] packet) {
-        PacketWrapper packetWrapper = new PacketWrapper(timestamp, packet);
+    public void addToBuffer(long timestamp, byte[] packet, int num) {
+        PacketWrapper packetWrapper = new PacketWrapper(timestamp, packet, num);
         packetBuffer.add(packetWrapper);
     }
 
@@ -86,10 +88,14 @@ public class VoiceProcessor implements Runnable {
      */
     private void processAudio(PacketWrapper packetWrapper) throws IOException {
         byte[] decryptedPacket = decryptAudio(packetWrapper.getData());
-        player.playBlock(decryptedPacket);
+        try {
+            player.playBlock(decryptedPacket);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
         // Check if the socket number is 2
-        if (socketNum == 2) {
+        if (socketNum == 2 || socketNum == 3) {
             PacketWrapper secondPacket = packetBuffer.peek(); // Peek the second packet without removing it from the buffer
 
             // Ensure the second packet exists
