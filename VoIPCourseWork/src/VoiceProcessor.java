@@ -31,19 +31,7 @@ public class VoiceProcessor implements Runnable {
             if (packetBuffer.size() >= 2){
                 try {
                     PacketWrapper firstPacket =  packetBuffer.take();
-
-                    byte[] decryptedPacket =  decryptAudio(firstPacket.getData());
-                    processAudio(firstPacket.getTimestamp(), decryptedPacket);
-
-                    PacketWrapper secondPacket = packetBuffer.peek();
-                    assert secondPacket != null;
-                    long timeDiff = secondPacket.getTimestamp() - firstPacket.getTimestamp();
-
-                    if ( timeDiff > 32){
-                        long interpTime = timeDiff / 2;
-                        processAudio(firstPacket.getTimestamp() + interpTime, decryptedPacket);
-                    }
-
+                    processAudio(firstPacket);
 
                 } catch (IOException | InterruptedException e) {
                     throw new RuntimeException(e);
@@ -70,8 +58,23 @@ public class VoiceProcessor implements Runnable {
         return unwrapDecrypt.array();
     }
 
-    private void processAudio(long timestamp, byte[] data) throws IOException {
-        player.playBlock(data);
+    private void processAudio(PacketWrapper packetWrapper) throws IOException {
+        byte[] decryptedPacket =  decryptAudio(packetWrapper.getData());
+        player.playBlock(decryptedPacket);
+
+
+        if (socketNum == 2) {
+            PacketWrapper secondPacket = packetBuffer.peek();
+
+            assert secondPacket != null;
+            long timeDiff = secondPacket.getTimestamp() - packetWrapper.getTimestamp();
+
+            if (timeDiff > 32) {
+                player.playBlock(decryptedPacket);
+            }
+        }
+
+
     }
 
 
