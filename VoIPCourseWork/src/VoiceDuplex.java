@@ -4,23 +4,25 @@ import java.util.Scanner;
 
 public class VoiceDuplex {
 
-
     static InetAddress clientIP = null;
     static int port = 55555;
     static Scanner scanner = new Scanner(System.in);
 
-    public static void main(String[] args) {
+    static int socketNum = 2;
 
-        // Check for IP
-        clientIP = getValidIPAddress();
-        port = getValidPORT();
+    public static void main(String[] args) throws UnknownHostException {
 
-        VoiceSender sender = new VoiceSender(clientIP, port);
-        VoiceReceiver receiver = new VoiceReceiver(port);
+//        clientIP = getValidIPAddress();
+//        port = getValidPORT();
+        clientIP = InetAddress.getLocalHost();
+        port = 55555;
+
+        VoiceProcessor processor =  new VoiceProcessor(socketNum);
+        new VoiceSender(clientIP, port, socketNum);
+        new VoiceReceiver(port, socketNum, processor);
     }
 
     public static InetAddress getValidIPAddress() {
-
         InetAddress tempIP = null;
 
         while (tempIP == null) {
@@ -47,14 +49,14 @@ public class VoiceDuplex {
 
         while (tempPort == -1){
             System.out.print("Enter PORT: ");
-            String PORTString = scanner.next();
+            String portString = scanner.next();
 
-            if (PORTString.equalsIgnoreCase("E")){
+            if (portString.equalsIgnoreCase("E")){
                 System.exit(0);
             }
 
             try {
-                tempPort = Integer.parseInt(PORTString);
+                tempPort = Integer.parseInt(portString);
 
             } catch (NumberFormatException e) {
                 System.out.println("ERROR: Invalid port Entered.");
