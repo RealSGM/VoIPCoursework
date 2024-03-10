@@ -12,6 +12,10 @@ public class VoiceSender implements Runnable {
 
     int port;
     InetAddress ip;
+
+    int encryptionKey = 15;
+    short authenticationKey = 10;
+
     boolean running = true;
 
     public VoiceSender(InetAddress clientIP, int clientPORT) {
@@ -39,13 +43,10 @@ public class VoiceSender implements Runnable {
 
             try {
                 AudioRecorder recorder = new AudioRecorder(); // Creating an AudioRecorder instance
-                int recordTime = 120; // Record time in seconds
+                int recordTime = 9999; // Record time in seconds
 
                 for (int i = 0; i < Math.ceil(recordTime / 0.016); i++) {
                     byte[] block = recorder.getBlock(); // Get block of audio data
-                    int encryptionKey = 15;
-                    short authenticationKey = 10;
-
 
                     // Initializing ByteBuffer for encryption
                     ByteBuffer unwrapEncrypt = ByteBuffer.allocate(block.length);
