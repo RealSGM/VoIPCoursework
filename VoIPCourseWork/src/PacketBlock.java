@@ -16,10 +16,6 @@ public class PacketBlock {
         return packets;
     }
 
-    public void setPackets(List<byte[]> deinterleavedPackets) {
-        packets = deinterleavedPackets;
-    }
-
     public void interleavePackets(){
         int maxLength = packets.stream().mapToInt(arr -> arr.length).max().orElse(0);
         List<byte[]> interleavedPackets = new ArrayList<>();

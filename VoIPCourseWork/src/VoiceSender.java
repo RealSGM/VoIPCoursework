@@ -11,11 +11,9 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.nio.ByteBuffer;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
 
 public class VoiceSender implements Runnable {
-    private static final int INTERLEAVE_FACTOR = 3;
+    private final int socketNum;
     DatagramSocket sendingSocket;
     int port;
     InetAddress ip;
@@ -26,6 +24,7 @@ public class VoiceSender implements Runnable {
     public VoiceSender(InetAddress clientIP, int clientPORT, int socketNumber) {
         this.ip = clientIP;
         this.port = clientPORT;
+        this.socketNum = socketNumber;
 
         try {
             switch (socketNumber) {
@@ -60,15 +59,21 @@ public class VoiceSender implements Runnable {
                     byte[] block = recorder.getBlock();
                     byte[] encryptedPacket = encryptPacket(block);
 
-                    packetBlock.addPacket(encryptedPacket);
-                    if (packetBlock.getPackets().size() == 16) {
+                    if (socketNum == 3) {
+                        packetBlock.addPacket(encryptedPacket);
+                        if (packetBlock.getPackets().size() == 16) {
 
-                        for (byte[] packetData : packetBlock.getPackets()) {
-                            DatagramPacket packet = new DatagramPacket(packetData, packetData.length, ip, port);
-                            sendingSocket.send(packet);
+                            for (byte[] packetData : packetBlock.getPackets()) {
+                                DatagramPacket packet = new DatagramPacket(packetData, packetData.length, ip, port);
+                                sendingSocket.send(packet);
+                            }
+
+                            packetBlock = new PacketBlock();
                         }
-
-                        packetBlock = new PacketBlock();
+                    }
+                    else{
+                        DatagramPacket packet = new DatagramPacket(encryptedPacket, encryptedPacket.length, ip, port);
+                        sendingSocket.send(packet);
                     }
                 }
 

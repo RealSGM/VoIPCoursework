@@ -3,17 +3,13 @@ import CMPC3M06.AudioPlayer;
 import javax.sound.sampled.LineUnavailableException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.HashSet;
 import java.util.concurrent.PriorityBlockingQueue;
 
 public class VoiceProcessor implements Runnable {
 
-    private PriorityBlockingQueue<PacketWrapper> packetBuffer = new PriorityBlockingQueue<>();
-    private HashSet<Long> timestampSet = new HashSet<>();
+    private final PriorityBlockingQueue<PacketWrapper> packetBuffer = new PriorityBlockingQueue<>();
     private AudioPlayer player;
     private int socketNum;
-    private int encryptionKey = 15;
-    private boolean running = true;
 
 
     public VoiceProcessor(int socket) {
@@ -30,17 +26,26 @@ public class VoiceProcessor implements Runnable {
             throw new RuntimeException(e);
         }
 
-        while (running) {
+        while (true) {
             // Process
-            if (packetBuffer.size() > 0){
+            if (packetBuffer.size() >= 2){
                 try {
-                    PacketWrapper packetWrapper =  packetBuffer.take();
-                    byte[] decryptedPacket =  decryptAudio(packetWrapper.getData());
-                    processAudio(packetWrapper.getTimestamp(), decryptedPacket);
+                    PacketWrapper firstPacket =  packetBuffer.take();
 
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                } catch (InterruptedException e) {
+                    byte[] decryptedPacket =  decryptAudio(firstPacket.getData());
+                    processAudio(firstPacket.getTimestamp(), decryptedPacket);
+
+                    PacketWrapper secondPacket = packetBuffer.peek();
+                    assert secondPacket != null;
+                    long timeDiff = secondPacket.getTimestamp() - firstPacket.getTimestamp();
+
+                    if ( timeDiff > 32){
+                        long interpTime = timeDiff / 2;
+                        processAudio(firstPacket.getTimestamp() + interpTime, decryptedPacket);
+                    }
+
+
+                } catch (IOException | InterruptedException e) {
                     throw new RuntimeException(e);
                 }
             }
@@ -58,6 +63,7 @@ public class VoiceProcessor implements Runnable {
 
         for (int j = 0; j < encryptedData.length / 4; j++) {
             int fourByte = cipherText.getInt();
+            int encryptionKey = 15;
             fourByte = fourByte ^ encryptionKey; // XOR decrypt
             unwrapDecrypt.putInt(fourByte);
         }
@@ -66,7 +72,6 @@ public class VoiceProcessor implements Runnable {
 
     private void processAudio(long timestamp, byte[] data) throws IOException {
         player.playBlock(data);
-        System.out.println(timestamp);
     }
 
 
