@@ -41,7 +41,6 @@ public class VoiceReceiver implements Runnable {
             System.exit(0);
         }
 
-        // Main loop
         while (running) {
             // Receive a DatagramPacket
             byte[] encryptedBlock = new byte[514];

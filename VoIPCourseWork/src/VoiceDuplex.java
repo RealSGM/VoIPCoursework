@@ -4,11 +4,12 @@ import java.util.Scanner;
 
 public class VoiceDuplex {
 
+
     static InetAddress clientIP = null;
     static int port = 55555;
     static Scanner scanner = new Scanner(System.in);
 
-    public static void main(String[] args) throws UnknownHostException {
+    public static void main(String[] args) {
 
         // Check for IP
         clientIP = getValidIPAddress();
@@ -18,7 +19,7 @@ public class VoiceDuplex {
         VoiceReceiver receiver = new VoiceReceiver(port);
     }
 
-    public static InetAddress getValidIPAddress() throws UnknownHostException {
+    public static InetAddress getValidIPAddress() {
 
         InetAddress tempIP = null;
 

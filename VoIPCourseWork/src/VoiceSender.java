@@ -35,43 +35,39 @@ public class VoiceSender implements Runnable {
             System.exit(0);
         }
 
-        System.out.println("X : Stop Recording");
-
         while (running) {
 
             try {
                 AudioRecorder recorder = new AudioRecorder(); // Creating an AudioRecorder instance
+                int recordTime = 120; // Record time in seconds
 
-                byte[] block = recorder.getBlock(); // Get block of audio data
-                int encryptionKey = 15;
-                short authenticationKey = 10;
+                for (int i = 0; i < Math.ceil(recordTime / 0.016); i++) {
+                    byte[] block = recorder.getBlock(); // Get block of audio data
+                    int encryptionKey = 15;
+                    short authenticationKey = 10;
 
 
-                // Initializing ByteBuffer for encryption
-                ByteBuffer unwrapEncrypt = ByteBuffer.allocate(block.length);
-                ByteBuffer plainText = ByteBuffer.wrap(block);
+                    // Initializing ByteBuffer for encryption
+                    ByteBuffer unwrapEncrypt = ByteBuffer.allocate(block.length);
+                    ByteBuffer plainText = ByteBuffer.wrap(block);
 
-                for (int j = 0; j < block.length / 4; j++) {
-                    int fourByte = plainText.getInt();
-                    fourByte = fourByte ^ encryptionKey; // XOR operation with key
-                    unwrapEncrypt.putInt(fourByte);
-                }
-                byte[] encryptedBlock = unwrapEncrypt.array();
+                    for (int j = 0; j < block.length / 4; j++) {
+                        int fourByte = plainText.getInt();
+                        fourByte = fourByte ^ encryptionKey; // XOR operation with key
+                        unwrapEncrypt.putInt(fourByte);
+                    }
+                    byte[] encryptedBlock = unwrapEncrypt.array();
 
-                // Creating a ByteBuffer for the voice packet
-                ByteBuffer voicePacket = ByteBuffer.allocate(514);
-                voicePacket.putShort(authenticationKey); // Adding authentication key
-                voicePacket.put(encryptedBlock); // Adding encrypted audio data
+                    // Creating a ByteBuffer for the voice packet
+                    ByteBuffer voicePacket = ByteBuffer.allocate(514);
+                    voicePacket.putShort(authenticationKey); // Adding authentication key
+                    voicePacket.put(encryptedBlock); // Adding encrypted audio data
 
-                byte[] voiceArray = voicePacket.array(); // Getting the byte array representation of the voice packet
+                    byte[] voiceArray = voicePacket.array(); // Getting the byte array representation of the voice packet
 
-                // Creating a DatagramPacket with the voice data and sending it
-                DatagramPacket packet = new DatagramPacket(voiceArray, voiceArray.length, ip, port);
-                sendingSocket.send(packet);
-
-                // Check if the user has pressed 'X' to stop recording
-                if (System.in.available() > 0 && System.in.read() == 'X') {
-                    stop(); // Stop recording if 'X' is pressed
+                    // Creating a DatagramPacket with the voice data and sending it
+                    DatagramPacket packet = new DatagramPacket(voiceArray, voiceArray.length, ip, port);
+                    sendingSocket.send(packet);
                 }
 
 
@@ -79,11 +75,5 @@ public class VoiceSender implements Runnable {
                 throw new RuntimeException(e);
             }
         }
-    }
-
-    public void stop() {
-        running = false;
-        sendingSocket.close(); // Close the socket
-        System.exit(1);
     }
 }
