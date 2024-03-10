@@ -49,7 +49,7 @@ public class VoiceSender implements Runnable {
 
     @Override
     public void run() {
-
+        Hamming74 encoder = new Hamming74();
         while (running) {
 
             try {
@@ -60,7 +60,16 @@ public class VoiceSender implements Runnable {
                 for (int i = 0; i < Math.ceil(recordTime / 0.016); i++) {
 
                     byte[] block = recorder.getBlock();
-                    byte[] encryptedPacket = encryptPacket(block);
+                    byte[] block2 = new byte[1024];
+                    int index = 0;
+                    for (byte b:
+                         block) {
+                        byte[] encodedPair = encoder.encode(b);
+                        block2[index] = encodedPair[0];
+                        block2[index+1] = encodedPair[1];
+                        index += 2;
+                    }
+                    byte[] encryptedPacket = encryptPacket(block2);
 
                     DatagramPacket packet = new DatagramPacket(encryptedPacket, encryptedPacket.length, ip, port);
                     sendingSocket.send(packet);
@@ -85,7 +94,7 @@ public class VoiceSender implements Runnable {
         byte[] encryptedBlock = unwrapEncrypt.array();
 
         // Creating a ByteBuffer for the voice packet
-        ByteBuffer voicePacket = ByteBuffer.allocate(522);
+        ByteBuffer voicePacket = ByteBuffer.allocate(1034); //changet to 1034
         voicePacket.putShort(authenticationKey); // Adding authentication key
         voicePacket.putLong(Instant.now().toEpochMilli());
         voicePacket.put(encryptedBlock); // Adding encrypted audio data

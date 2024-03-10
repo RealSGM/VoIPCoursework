@@ -27,16 +27,32 @@ public class VoiceProcessor implements Runnable {
         } catch (LineUnavailableException e) {
             throw new RuntimeException(e);
         }
-
+        Hamming74 decoder = new Hamming74();
         while (running) {
             if (packetBuffer.size() >= 2) {
                 PacketWrapper firstPacket = packetBuffer.poll();
 
 
                 byte[] decryptedPacket = decryptAudio(firstPacket.getData());
+                byte[] decodedPacket = new byte[512];
+                int index = 0;
+                boolean alternating = false;
+                byte temp = (byte) 0;
+                for (byte b: decryptedPacket) {
+                    byte decodedByte = decoder.decode(b);
+                    if (alternating){
+                        temp = (byte) (temp << 4);
+                        byte joinedByte = (byte) (decodedByte | temp);
+                        decodedPacket[index] = joinedByte;
+                        index++;
+                    } else {
+                        temp = decodedByte;
+                    }
+                    alternating = !alternating;
+                }
 
                 try {
-                    processAudio(firstPacket.getTimestamp(), decryptedPacket);
+                    processAudio(firstPacket.getTimestamp(), decodedPacket); //change to decodedpacket
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }

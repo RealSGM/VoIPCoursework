@@ -38,6 +38,7 @@ public class Hamming74 {
             k = 7-k;
             //k points to the erroneous bit
             data = (byte) (data ^ (1 << k));
+            System.out.println("Fixed");
         }
         //re-get data bits
         boolean d3 = ((data & 0b0000001) >> 0) == 1;

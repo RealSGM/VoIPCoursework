@@ -45,7 +45,7 @@ public class VoiceReceiver implements Runnable {
     @Override
     public void run() {
         while (running) {
-            byte[] encryptedBlock = new byte[522];
+            byte[] encryptedBlock = new byte[1034]; //changet to 1034/522
             DatagramPacket packet = new DatagramPacket(encryptedBlock, encryptedBlock.length);
 
             try {
