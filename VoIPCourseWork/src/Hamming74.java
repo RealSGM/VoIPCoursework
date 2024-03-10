@@ -75,14 +75,4 @@ public class Hamming74 {
         return result;
     }
 
-    public static void main(String[] args) {
-        Hamming74 encoder = new Hamming74();
-        byte[] pair = encoder.encode((byte) 0b10101111);
-        System.out.println(Integer.toBinaryString(pair[0]));
-        System.out.println(Integer.toBinaryString(pair[1]));
-        System.out.println();
-        System.out.println(Integer.toBinaryString(encoder.decode((byte) 0b0110010)));
-        System.out.println(Integer.toBinaryString(encoder.decode((byte) 0b0010110)));
-
-    }
 }
