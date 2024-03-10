@@ -4,7 +4,6 @@ import uk.ac.uea.cmp.voip.DatagramSocket3;
 import uk.ac.uea.cmp.voip.DatagramSocket4;
 
 import javax.sound.sampled.LineUnavailableException;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -16,11 +15,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class VoiceSender implements Runnable {
+    private static final int INTERLEAVE_FACTOR = 3;
     DatagramSocket sendingSocket;
-
     int port;
     InetAddress ip;
-
     int encryptionKey = 15;
     short authenticationKey = 10;
     boolean running = true;
@@ -62,8 +60,16 @@ public class VoiceSender implements Runnable {
                     byte[] block = recorder.getBlock();
                     byte[] encryptedPacket = encryptPacket(block);
 
-                    DatagramPacket packet = new DatagramPacket(encryptedPacket, encryptedPacket.length, ip, port);
-                    sendingSocket.send(packet);
+                    packetBlock.addPacket(encryptedPacket);
+                    if (packetBlock.getPackets().size() == 16) {
+
+                        for (byte[] packetData : packetBlock.getPackets()) {
+                            DatagramPacket packet = new DatagramPacket(packetData, packetData.length, ip, port);
+                            sendingSocket.send(packet);
+                        }
+
+                        packetBlock = new PacketBlock();
+                    }
                 }
 
             } catch (LineUnavailableException | IOException e) {
@@ -72,7 +78,7 @@ public class VoiceSender implements Runnable {
         }
     }
 
-    public byte[] encryptPacket(byte[] block){
+    public byte[] encryptPacket(byte[] block) {
         // Initializing ByteBuffer for encryption
         ByteBuffer unwrapEncrypt = ByteBuffer.allocate(block.length);
         ByteBuffer plainText = ByteBuffer.wrap(block);

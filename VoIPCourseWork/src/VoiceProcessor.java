@@ -3,11 +3,13 @@ import CMPC3M06.AudioPlayer;
 import javax.sound.sampled.LineUnavailableException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.HashSet;
 import java.util.concurrent.PriorityBlockingQueue;
 
 public class VoiceProcessor implements Runnable {
 
     private PriorityBlockingQueue<PacketWrapper> packetBuffer = new PriorityBlockingQueue<>();
+    private HashSet<Long> timestampSet = new HashSet<>();
     private AudioPlayer player;
     private int socketNum;
     private int encryptionKey = 15;
@@ -29,18 +31,18 @@ public class VoiceProcessor implements Runnable {
         }
 
         while (running) {
-            if (packetBuffer.size() >= 2) {
-                PacketWrapper firstPacket = packetBuffer.poll();
-
-
-                byte[] decryptedPacket = decryptAudio(firstPacket.getData());
-
+            // Process
+            if (packetBuffer.size() > 0){
                 try {
-                    processAudio(firstPacket.getTimestamp(), decryptedPacket);
+                    PacketWrapper packetWrapper =  packetBuffer.take();
+                    byte[] decryptedPacket =  decryptAudio(packetWrapper.getData());
+                    processAudio(packetWrapper.getTimestamp(), decryptedPacket);
+
                 } catch (IOException e) {
                     throw new RuntimeException(e);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
                 }
-
             }
         }
     }
@@ -64,6 +66,8 @@ public class VoiceProcessor implements Runnable {
 
     private void processAudio(long timestamp, byte[] data) throws IOException {
         player.playBlock(data);
+        System.out.println(timestamp);
     }
+
 
 }
