@@ -11,6 +11,7 @@ import java.nio.ByteBuffer;
 public class VoiceReceiver implements Runnable {
     private DatagramSocket receivingSocket;
     private final VoiceProcessor processor;
+    private Thread processorThread;
     private final int socketNum;
 
     public VoiceReceiver(int clientPORT, int socketNumber, VoiceProcessor processorInstance) {
@@ -35,7 +36,7 @@ public class VoiceReceiver implements Runnable {
         receiverThread.start();
 
         // Start the processor thread
-        Thread processorThread = new Thread(processor);
+        processorThread = new Thread(processor);
         processorThread.start();
     }
 
@@ -61,6 +62,7 @@ public class VoiceReceiver implements Runnable {
             }
         }
         receivingSocket.close();
+        processorThread.interrupt();
     }
 
     public void decodeBuffer(ByteBuffer buffer){

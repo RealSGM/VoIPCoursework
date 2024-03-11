@@ -3,13 +3,14 @@ import CMPC3M06.AudioPlayer;
 import javax.sound.sampled.LineUnavailableException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.concurrent.PriorityBlockingQueue;
+import java.util.*;
+import java.util.concurrent.ConcurrentSkipListMap;
 
 public class VoiceProcessor implements Runnable {
 
-    private final PriorityBlockingQueue<PacketWrapper> packetBuffer = new PriorityBlockingQueue<>();
     private final int socketNum;
     private AudioPlayer player;
+    private final ConcurrentSkipListMap<Integer, PacketWrapper> packetBuffer = new ConcurrentSkipListMap<>(); // Use ConcurrentSkipListMap
 
     public VoiceProcessor(int socket) {
         this.socketNum = socket;
@@ -23,25 +24,26 @@ public class VoiceProcessor implements Runnable {
             throw new RuntimeException(e);
         }
         CyclicRedundancyCheck decoder = new CyclicRedundancyCheck();
-        // Continuous processing loop
-         while (true) {
-             // Process packets if there are at least two packets in the buffer
-             if (!packetBuffer.isEmpty()) {
-                 try {
-                     PacketWrapper firstPacket = packetBuffer.take(); // Take the first packet from the buffer
-                     byte[] decryptedPacket = decryptAudio(firstPacket.data());
-                     byte[] decodedPacket = decoder.decode(decryptedPacket);
-                     processAudio(decodedPacket); // Process the first packet
-                 } catch (IOException | InterruptedException e) {
-                     throw new RuntimeException(e);
-                 }
-             }
-         }
 
+        // Continuous processing loop
+        while (true) {
+            // Process packets if there are at least two packets in the buffer
+            if (packetBuffer.size() >= 16) {
+                try {
+                    Map.Entry<Integer, PacketWrapper> entry = packetBuffer.pollFirstEntry(); // Take and remove the first packet from the buffer
+                    PacketWrapper firstPacket = entry.getValue(); // Take the first packet from the buffer
+                    byte[] decryptedPacket = decryptAudio(firstPacket.data());
+                    byte[] decodedPacket = decoder.decode(decryptedPacket);
+                    processAudio(decodedPacket); // Process the first packet
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
     }
 
     public void addToBuffer(PacketWrapper packetWrapper) {
-        packetBuffer.add(packetWrapper);
+        packetBuffer.put(packetWrapper.getHeader().getSequenceNumber(), packetWrapper);
     }
 
     private byte[] decryptAudio(byte[] encryptedData) {

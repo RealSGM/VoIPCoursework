@@ -73,8 +73,7 @@ public class VoiceSender implements Runnable {
                 if (socketNum != 3) {
                     sendPacket(encryptedPacket);
                 } else {
-                    packetBlock.addPacket(encryptedPacket);
-                    if (packetBlock.getPackets().size() == 16) {
+                    if (packetBlock.addPacketToBlock(encryptedPacket)){
                         sendPacketBlock(packetBlock);
                         packetBlock = new PacketBlock();
                     }
@@ -124,7 +123,6 @@ public class VoiceSender implements Runnable {
     }
     
     private void sendPacketBlock(PacketBlock packetBlock) throws IOException {
-//        packetBlock.interleavePackets();
         for (byte[] packetData : packetBlock.getPackets()) {
             sendPacket(packetData);
         }
