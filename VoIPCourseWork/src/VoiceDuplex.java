@@ -8,14 +8,15 @@ public class VoiceDuplex {
     static InetAddress clientIP = null;
     static int port = 55555;
     static Scanner scanner = new Scanner(System.in);
+    static int socketNum = 1;
 
-    static int socketNum = 2;
-
-    public static void main(String[] args) {
+    public static void main(String[] args) throws UnknownHostException {
 
         // Get valid IP address and port from user
-        clientIP = getValidIPAddress();
-        port = getValidPORT();
+//        clientIP = getValidIPAddress();
+//        port = getValidPORT();
+        clientIP = InetAddress.getLocalHost();
+        port = 55555;
 
         // Initialize VoiceProcessor, VoiceSender, and VoiceReceiver
         VoiceProcessor processor =  new VoiceProcessor(socketNum);
