@@ -1,4 +1,8 @@
+import javax.print.attribute.standard.DateTimeAtCompleted;
+
 public class Hamming74 {
+    static int counter = 0;
+    static int counter2 = 0;
     public byte[] encode(byte data){
         //Split byte into two
         byte leftHalf = (byte) ((data & 0xF0) >> 4);
@@ -34,11 +38,10 @@ public class Hamming74 {
         if (p2 != p2_)
             k += 4;
         //returns corrected byte if needed
+
         if (k>0){
-            k = 7-k;
             //k points to the erroneous bit
             data = (byte) (data ^ (1 << k));
-            System.out.println("Fixed");
         }
         //re-get data bits
         boolean d3 = ((data & 0b0000001) >> 0) == 1;
@@ -75,5 +78,5 @@ public class Hamming74 {
         );
         return result;
     }
-
 }
+
