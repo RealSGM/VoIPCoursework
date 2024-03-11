@@ -10,9 +10,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.nio.ByteBuffer;
-import java.time.Instant;
 
-//This class represents a voice sender that sends audio data over UDP.
 public class VoiceSender implements Runnable {
 
     private final int socketNum;
@@ -20,20 +18,11 @@ public class VoiceSender implements Runnable {
     InetAddress ip;
     DatagramSocket sendingSocket;
 
-    int encryptionKey = 15;
-    short authenticationKey = 10;
     int sequenceNumber = 0;
-    double breakTime = 5;
-    int packetsPerSecond = 128;
+    
+    double tempTime = 20;
     long elapsedTime = System.currentTimeMillis();
-
-    /**
-     * Constructs a VoiceSender object with the specified parameters.
-     *
-     * @param clientIP     The destination IP address.
-     * @param clientPORT   The destination port number.
-     * @param socketNumber The socket number.
-     */
+    
     public VoiceSender(InetAddress clientIP, int clientPORT, int socketNumber) {
         this.ip = clientIP;
         this.port = clientPORT;
@@ -58,9 +47,6 @@ public class VoiceSender implements Runnable {
         thread.start();
     }
 
-    /**
-     * Starts the sender thread to send audio data.
-     */
     @Override
     public void run() {
         PacketBlock packetBlock = new PacketBlock();
@@ -71,13 +57,17 @@ public class VoiceSender implements Runnable {
             AudioRecorder recorder = new AudioRecorder();
 
             while (running) {
+                
+                // Network Analysis
                 elapsedTime = System.currentTimeMillis() - startTime;
-                if (elapsedTime > breakTime * 1000) {
+                if (elapsedTime > tempTime * 1000) {
                     running = false;
                 }
 
+                // Packet Creation
                 byte[] block = recorder.getBlock();
-                byte[] encryptedPacket = encryptPacket(block);
+                byte[] encryptedData = encryptData(block);
+                byte[] encryptedPacket = createPacket(encryptedData);
 
                 if (socketNum != 3) {
                     sendPacket(encryptedPacket);
@@ -91,20 +81,17 @@ public class VoiceSender implements Runnable {
             }
 
             System.out.printf("Packets Sent: %d. %n", sequenceNumber);
-            System.out.println("Bitrate: " + (sequenceNumber * 526 / (elapsedTime / 1000)));
+            System.out.println("Bitrate: " + (sequenceNumber * 612L / (elapsedTime / 1000)));
+
         } catch (LineUnavailableException | IOException e) {
             throw new RuntimeException(e);
         }
     }
-
-    /**
-     * Encrypts a block of audio data.
-     *
-     * @param block The audio data block to be encrypted.
-     * @return The encrypted audio data block.
-     */
-    public byte[] encryptPacket(byte[] block) {
+    
+    public byte[] encryptData(byte[] block) {
         // Initializing ByteBuffer for encryption
+        int encryptionKey = 15;
+
         ByteBuffer unwrapEncrypt = ByteBuffer.allocate(block.length);
         ByteBuffer plainText = ByteBuffer.wrap(block);
 
@@ -113,26 +100,32 @@ public class VoiceSender implements Runnable {
             fourByte = fourByte ^ encryptionKey; // XOR operation with key
             unwrapEncrypt.putInt(fourByte);
         }
-        byte[] encryptedBlock = unwrapEncrypt.array();
+
+        return unwrapEncrypt.array();
+    }
+    
+    private byte[] createPacket(byte[] encryptedData){
+        long timestamp = System.currentTimeMillis();
+        HeaderWrapper headerWrapper = new HeaderWrapper(timestamp, sequenceNumber);
+        PacketWrapper packetWrapper = new PacketWrapper(headerWrapper, encryptedData);
+
+        int size = packetWrapper.calculatePacketSize();
+        System.out.println(size);
 
         // Creating a ByteBuffer for the voice packet
-        ByteBuffer voicePacket = ByteBuffer.allocate(526);
-        voicePacket.putShort(authenticationKey); // Adding authentication key
-        voicePacket.putInt(sequenceNumber);
-        voicePacket.putLong(Instant.now().toEpochMilli());
-        voicePacket.put(encryptedBlock); // Adding encrypted audio data
+        ByteBuffer voicePacket = ByteBuffer.allocate(size);
+
+        voicePacket.putShort(headerWrapper.getAuthenticationNumber());
+        voicePacket.putInt(headerWrapper.getSequenceNumber());
+        voicePacket.putLong(timestamp);
+        voicePacket.put(encryptedData);
         sequenceNumber++;
 
         return voicePacket.array();
     }
-
-    /**
-     * Sends a packet block containing multiple packets.
-     *
-     * @param packetBlock The packet block to be sent.
-     * @throws IOException If an I/O error occurs while sending the packet block.
-     */
+    
     private void sendPacketBlock(PacketBlock packetBlock) throws IOException {
+//        packetBlock.interleavePackets();
         for (byte[] packetData : packetBlock.getPackets()) {
             sendPacket(packetData);
         }

@@ -1,24 +1,27 @@
-public class PacketWrapper implements Comparable<PacketWrapper>{
-    final long timestamp;
-    final int sequenceNumber;
-    final byte[] data;
+public record PacketWrapper(HeaderWrapper header, byte[] data) implements Comparable<PacketWrapper> {
+    static final int dataSize = 512;
 
-    public PacketWrapper(long timestamp, byte[] data, int num) {
-        this.timestamp = timestamp;
-        this.data = data;
-        this.sequenceNumber = num;
-    }
-
-    public long getTimestamp() {
-        return timestamp;
-    }
-
-    public byte[] getData() {
-        return data;
+    public int calculatePacketSize() {
+        return header.calculateHeaderSize() + data.length;
     }
 
     @Override
-    public int compareTo(PacketWrapper other) {
-        return Long.compare(this.timestamp, other.timestamp);
+    public boolean equals(Object obj) {
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return 0;
+    }
+
+    @Override
+    public String toString() {
+        return "";
+    }
+
+    @Override
+    public int compareTo(PacketWrapper o) {
+        return Integer.compare(header().getSequenceNumber(), o.header().getSequenceNumber());
     }
 }
