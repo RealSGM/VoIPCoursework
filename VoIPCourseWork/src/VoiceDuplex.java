@@ -8,7 +8,7 @@ public class VoiceDuplex {
     static InetAddress clientIP = null;
     static int port = 55555;
     static Scanner scanner = new Scanner(System.in);
-    static int socketNum = 1;
+    static int socketNum = 4;
 
     public static void main(String[] args) throws UnknownHostException {
 

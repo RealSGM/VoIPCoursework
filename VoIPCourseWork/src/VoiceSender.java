@@ -52,7 +52,7 @@ public class VoiceSender implements Runnable {
         PacketBlock packetBlock = new PacketBlock();
         long startTime = System.currentTimeMillis();
         boolean running = true;
-
+        CyclicRedundancyCheck encoder = new CyclicRedundancyCheck();
         try {
             AudioRecorder recorder = new AudioRecorder();
 
@@ -66,7 +66,8 @@ public class VoiceSender implements Runnable {
 
                 // Packet Creation
                 byte[] block = recorder.getBlock();
-                byte[] encryptedData = encryptData(block);
+                byte[] encodedData = encoder.encode(block);
+                byte[] encryptedData = encryptData(encodedData);
                 byte[] encryptedPacket = createPacket(encryptedData);
 
                 if (socketNum != 3) {
@@ -110,8 +111,6 @@ public class VoiceSender implements Runnable {
         PacketWrapper packetWrapper = new PacketWrapper(headerWrapper, encryptedData);
 
         int size = packetWrapper.calculatePacketSize();
-        System.out.println(size);
-
         // Creating a ByteBuffer for the voice packet
         ByteBuffer voicePacket = ByteBuffer.allocate(size);
 

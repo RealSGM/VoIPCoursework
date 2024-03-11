@@ -22,14 +22,16 @@ public class VoiceProcessor implements Runnable {
         } catch (LineUnavailableException e) {
             throw new RuntimeException(e);
         }
-
+        CyclicRedundancyCheck decoder = new CyclicRedundancyCheck();
         // Continuous processing loop
          while (true) {
              // Process packets if there are at least two packets in the buffer
              if (!packetBuffer.isEmpty()) {
                  try {
                      PacketWrapper firstPacket = packetBuffer.take(); // Take the first packet from the buffer
-                     processAudio(firstPacket); // Process the first packet
+                     byte[] decryptedPacket = decryptAudio(firstPacket.data());
+                     byte[] decodedPacket = decoder.decode(decryptedPacket);
+                     processAudio(decodedPacket); // Process the first packet
                  } catch (IOException | InterruptedException e) {
                      throw new RuntimeException(e);
                  }
@@ -55,10 +57,9 @@ public class VoiceProcessor implements Runnable {
         return unwrapDecrypt.array();
     }
 
-    private void processAudio(PacketWrapper packetWrapper) throws IOException {
-        byte[] decryptedPacket = decryptAudio(packetWrapper.data());
+    private void processAudio(byte[] packet) throws IOException {
         try {
-            player.playBlock(decryptedPacket);
+            player.playBlock(packet);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

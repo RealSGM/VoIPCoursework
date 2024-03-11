@@ -44,7 +44,7 @@ public class VoiceReceiver implements Runnable {
         boolean running = true;
         HeaderWrapper dummyHeader = new HeaderWrapper(1L, 1);
         PacketWrapper dummyPacket = new PacketWrapper(dummyHeader, new byte[PacketWrapper.dataSize]);
-        int packetSize = dummyPacket.calculatePacketSize();
+        int packetSize = 1038;
 
         while (running) {
             byte[] encryptedBlock = new byte[packetSize];
