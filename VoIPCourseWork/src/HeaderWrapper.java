@@ -2,9 +2,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class HeaderWrapper {
-    final long timestamp;
-    final int sequenceNumber;
-    static final short authenticationNumber = 10;
+    private final long timestamp;
+    private final int sequenceNumber;
+    private static final short authenticationNumber = 10;
 
     Map<String, Integer> byteMap = new HashMap<>();
 
