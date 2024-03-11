@@ -2,16 +2,14 @@ import java.util.Random;
 
 public class DiffieHellman {
     public long P, G;
-    private long private_key, public_key;
+    private final long private_key, public_key;
 
-    // Set to 1000 for convenience
-    private final int BOUND = 1000;
-
-    public DiffieHellman(){
-      this.P = GeneratePrimeLong(); // Large Prime Number
+    public DiffieHellman(long P, long G){
+      this.P = P; //GeneratePrimeLong(); // Large Prime Number
         Random random = new Random();
-      this.G = random.nextLong(BOUND); // Primitive root modulo p
-      this.private_key = random.nextLong(BOUND); // Private Key
+//      this.G = random.nextLong(BOUND); // Primitive root modulo p
+        this.G = G;
+      this.private_key = random.nextLong(this.P); // Private Key
       this.public_key = generateKey(this.G, this.private_key, this.P);
 //    this.b = new Random().nextLong(BOUND);
     }
@@ -36,7 +34,7 @@ public class DiffieHellman {
     private long GeneratePrimeLong(){
         long randomPrime;
         do {
-            randomPrime = new Random().nextLong(BOUND);
+            randomPrime = new Random().nextLong();
         } while (!isPrime(randomPrime));
         return randomPrime;
     }
@@ -58,15 +56,14 @@ public class DiffieHellman {
         }
     }
 
-//    private long secretKey(long y, long a, long P){
-//        return generateKey(y, a, P);
-//    }
-
 
 
     public static void main(String[] args) {
 
-        DiffieHellman dh = new DiffieHellman();
+        long P = 1125899839733759L;
+        long G = 179424691L;
+
+        DiffieHellman dh = new DiffieHellman(P, G);
         SenderKey sender = new SenderKey(dh);
         long senderPublicKey = sender.sendPublicKey();
 
@@ -82,7 +79,7 @@ public class DiffieHellman {
 }
 
 class SenderKey{
-    private DiffieHellman dh;
+    private final DiffieHellman dh;
     private long shared_key;
 
     public SenderKey(DiffieHellman dh){
@@ -103,7 +100,7 @@ class SenderKey{
 }
 
 class ReceiverKey {
-    private DiffieHellman dh;
+    private final DiffieHellman dh;
     private long shared_key;
 
     public ReceiverKey(DiffieHellman dh) {

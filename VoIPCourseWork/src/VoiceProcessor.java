@@ -11,8 +11,12 @@ public class VoiceProcessor implements Runnable {
     private final int socketNum;
     private AudioPlayer player;
 
-    public VoiceProcessor(int socket) {
+    private final DiffieHellman dh;
+    private long shared_key;
+
+    public VoiceProcessor(int socket, DiffieHellman dh) {
         this.socketNum = socket;
+        this.dh = dh;
     }
 
     @Override
@@ -50,7 +54,7 @@ public class VoiceProcessor implements Runnable {
 
         for (int j = 0; j < encryptedData.length / 4; j++) {
             int fourByte = cipherText.getInt();
-            int encryptionKey = 15;
+            int encryptionKey = (int) this.getShared_key();
             fourByte = fourByte ^ encryptionKey; // XOR decrypt
             unwrapDecrypt.putInt(fourByte);
         }
@@ -63,5 +67,17 @@ public class VoiceProcessor implements Runnable {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public long sendPublicKey() {
+        return this.dh.getPublic_key();
+    }
+
+    public void receivePublicKey(long otherPublicKey) {
+        this.shared_key = this.dh.generateSecretKey(otherPublicKey);
+    }
+
+    public long getShared_key() {
+        return this.shared_key;
     }
 }
