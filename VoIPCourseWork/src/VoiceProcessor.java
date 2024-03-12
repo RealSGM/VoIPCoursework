@@ -100,9 +100,9 @@ public class VoiceProcessor implements Runnable {
     private byte[] interpolatePacketData(PacketWrapper firstPacket, PacketWrapper secondPacket) {
         byte[] firstData = firstPacket.data();
         byte[] secondData = secondPacket.data();
-        byte[] interpolatedData = new byte[dummyPacket.data().length];
+        byte[] interpolatedData = new byte[dummyPacket.data().length / 2];
 
-        for (int i = 0; i < dummyPacket.data().length; i++) {
+        for (int i = 0; i < interpolatedData.length; i++) {
             double ratio = (double) (i + 1) / packetSize;
             interpolatedData[i] = (byte) ((1 - ratio) * firstData[i] + ratio * secondData[i]);
         }
@@ -145,7 +145,6 @@ public class VoiceProcessor implements Runnable {
         for (int j = 0; j < encryptedData.length / 4; j++) {
             int fourByte = cipherText.getInt();
             int encryptionKey = (int) this.getShared_key();
-            System.out.println(this.getShared_key());
             fourByte = fourByte ^ encryptionKey; // XOR decrypt
             unwrapDecrypt.putInt(fourByte);
         }

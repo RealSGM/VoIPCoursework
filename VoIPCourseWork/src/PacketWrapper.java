@@ -1,5 +1,5 @@
 public record PacketWrapper(HeaderWrapper header, byte[] data) implements Comparable<PacketWrapper> {
-    static final int dataSize = 1024;
+    static final int dataSize = 512;
 
     public int calculatePacketSize() {
         return header.calculateHeaderSize() + data.length;

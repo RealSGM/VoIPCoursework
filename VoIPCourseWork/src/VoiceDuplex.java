@@ -1,6 +1,5 @@
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Objects;
 import java.util.Scanner;
 
 /**
@@ -16,7 +15,8 @@ public class VoiceDuplex {
 
         DiffieHellman dh = new DiffieHellman();
         HeaderWrapper headerWrapper = new HeaderWrapper(1L, 1);
-        PacketWrapper dummyPacket = new PacketWrapper(headerWrapper, new byte[1024]);
+
+        PacketWrapper dummyPacket = new PacketWrapper(headerWrapper, new byte[(socketNum == 4) ? PacketWrapper.dataSize * 2 : PacketWrapper.dataSize]);
 
         // Initialize VoiceProcessor, VoiceSender, and VoiceReceiver
         VoiceProcessor processor =  new VoiceProcessor(socketNum, dummyPacket, dh);
