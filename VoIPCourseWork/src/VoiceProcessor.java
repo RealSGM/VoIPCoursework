@@ -26,20 +26,27 @@ public class VoiceProcessor implements Runnable {
         CyclicRedundancyCheck decoder = new CyclicRedundancyCheck();
 
         // Continuous processing loop
-        while (true) {
-            // Process packets if there are at least two packets in the buffer
-            if (packetBuffer.size() >= 16) {
-                try {
-                    Map.Entry<Integer, PacketWrapper> entry = packetBuffer.pollFirstEntry(); // Take and remove the first packet from the buffer
-                    PacketWrapper firstPacket = entry.getValue(); // Take the first packet from the buffer
-                    byte[] decryptedPacket = decryptAudio(firstPacket.data());
-                    byte[] decodedPacket = decoder.decode(decryptedPacket);
-                    processAudio(decodedPacket); // Process the first packet
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        }
+         while (true) {
+             // Process packets if there are at least two packets in the buffer
+             if (packetBuffer.size() >= 16) {
+                 try {
+                     Map.Entry<Integer, PacketWrapper> firstEntry = packetBuffer.pollFirstEntry(); // Take and remove the first packet from the buffer
+                     PacketWrapper firstPacket = firstEntry.getValue(); // Take the first packet from the buffer
+                     decodePacket(firstPacket, decoder);
+                     
+                     if (socketNum == 2){
+                         Map.Entry<Integer, PacketWrapper> secondEntry = packetBuffer.firstEntry(); // Take and remove the first packet from the buffer
+                         PacketWrapper secondPacket = secondEntry.getValue();
+                         if (secondPacket.getHeader().getTimestamp() - firstPacket.getHeader().getTimestamp() > 32){
+                             decodePacket(secondPacket, decoder);
+                         }
+                     }
+
+                 } catch (IOException e) {
+                     throw new RuntimeException(e);
+                 }
+             }
+         }
     }
 
     public void addToBuffer(PacketWrapper packetWrapper) {
@@ -57,6 +64,12 @@ public class VoiceProcessor implements Runnable {
             unwrapDecrypt.putInt(fourByte);
         }
         return unwrapDecrypt.array();
+    }
+
+    private void decodePacket(PacketWrapper packet, CyclicRedundancyCheck decoder) throws IOException {
+        byte[] decryptedPacket = decryptAudio(packet.data());
+        byte[] decodedPacket = decoder.decode(decryptedPacket);
+        processAudio(decodedPacket); // Process the first packet
     }
 
     private void processAudio(byte[] packet) throws IOException {
