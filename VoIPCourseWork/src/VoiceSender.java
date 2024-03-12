@@ -11,8 +11,8 @@ import java.nio.ByteBuffer;
 
 public class VoiceSender implements Runnable {
 
-    private final int socketNum;
-    private final PacketWrapper dummyPacket;
+    final int socketNum;
+    final PacketWrapper dummyPacket;
     int port;
     InetAddress ip;
     DatagramSocket sendingSocket;
@@ -22,7 +22,7 @@ public class VoiceSender implements Runnable {
     long elapsedTime = System.currentTimeMillis();
     private final DiffieHellman dh;
     private long shared_key;
-    
+
     public VoiceSender(InetAddress clientIP, int clientPORT, int socketNumber, PacketWrapper dummyPacket, DiffieHellman dh) {
         this.ip = clientIP;
         this.port = clientPORT;
@@ -57,7 +57,7 @@ public class VoiceSender implements Runnable {
             AudioRecorder recorder = new AudioRecorder();
 
             while (running) {
-                
+
                 elapsedTime = System.currentTimeMillis() - startTime;
                 if (elapsedTime > tempTime * 1000) {
                     running = false;
@@ -92,7 +92,7 @@ public class VoiceSender implements Runnable {
             throw new RuntimeException(e);
         }
     }
-    
+
     public byte[] encryptData(byte[] block) {
         // Initializing ByteBuffer for encryption
         long encryptionKey = this.getSharedKey();

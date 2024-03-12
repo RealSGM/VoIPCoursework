@@ -53,21 +53,10 @@ public class VoiceProcessor implements Runnable {
                          PacketWrapper secondPacket = secondEntry.getValue();
                          // Check for delayed packets and interpolate if necessary
                          long delay = secondPacket.header().getTimestamp() - firstPacket.header().getTimestamp();
-                         if (secondPacket.header().getTimestamp() - firstPacket.header().getTimestamp() > 200) {
+                         if (secondPacket.header().getTimestamp() - firstPacket.header().getTimestamp() > 100) {
                              byte[] interpolatedData = interpolateDelayedPacketData(firstPacket, secondPacket,delay);
                              PacketWrapper interpolatedPacket = new PacketWrapper(secondPacket.header(), interpolatedData);
                              decodePacket(interpolatedPacket, decoder);
-                         }
-                     }
-                     // Inside the while loop of the run() method in VoiceProcessor
-                     if (socketNum == 3) {
-                         Map.Entry<Integer, PacketWrapper> secondEntry = packetBuffer.firstEntry();
-                         PacketWrapper secondPacket = secondEntry.getValue();
-                         // Check for missing packets and handle accordingly
-                         if (secondPacket.header().getTimestamp() - firstPacket.header().getTimestamp() > 200) {
-                             byte[] missingPacketData = generateSilence(); // Implement this method
-                             PacketWrapper missingPacket = new PacketWrapper(firstPacket.header(), missingPacketData);
-                             decodePacket(missingPacket, decoder);
                          }
                      }
 
@@ -87,8 +76,7 @@ public class VoiceProcessor implements Runnable {
     }
     private byte[] generateSilence() {
         int dataSize = dummyPacket.calculatePacketSize();
-        byte[] silenceData = new byte[dataSize];
-        return silenceData;
+        return new byte[dataSize];
     }
 
     /**

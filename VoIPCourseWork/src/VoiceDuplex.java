@@ -28,7 +28,6 @@ public class VoiceDuplex {
         long receiverPublicKey = processor.sendPublicKey();
         sender.receivePublicKey(receiverPublicKey);
         processor.receivePublicKey(senderPublicKey);
-
     }
 
     // Method to get a valid IP address from the user
@@ -37,7 +36,7 @@ public class VoiceDuplex {
 
         // Loop until a valid IP address is entered
         while (true) {
-            System.out.print("Enter IP (default:localhost): ");
+            System.out.print("Enter IP [default::localhost] >> ");
             String ipString = scanner.nextLine();
 
             // Set the IP address to localhost if the input is empty
@@ -48,7 +47,7 @@ public class VoiceDuplex {
             try {
                 return InetAddress.getByName(ipString);
             } catch (UnknownHostException e) {
-                System.out.println("ERROR: Invalid IP Address");
+                System.out.println("ERROR | Invalid IP Address.");
             }
         }
     }
@@ -56,7 +55,7 @@ public class VoiceDuplex {
     // Method to get a valid port number from the user
     public static int getValidPort(Scanner scanner) {
         while (true) {
-            System.out.print("Enter PORT (Default: 5555): ");
+            System.out.print("Enter port [default::5555] >> ");
             String portString = scanner.nextLine();
 
             if (portString.isEmpty()) {
@@ -66,7 +65,7 @@ public class VoiceDuplex {
             try {
                 return Integer.parseInt(portString);
             } catch (NumberFormatException e) {
-                System.out.println("ERROR: Invalid port entered.");
+                System.out.println("ERROR | Invalid port entered.");
             }
         }
     }
@@ -75,9 +74,9 @@ public class VoiceDuplex {
     public static int getSocketNum(Scanner scanner) {
         int userInput;
         do {
-            System.out.print("Please enter a socket (1, 2, 3, 4): ");
+            System.out.print("Please enter a socket number [1, 2, 3, 4]  >> ");
             while (!scanner.hasNextInt()) {
-                System.out.print("Invalid input. Please enter a valid socket (1, 2, 3, 4): ");
+                System.out.print("Please enter a socket number [1, 2, 3, 4]  >> ");
                 scanner.next(); // Consume the invalid input
             }
             userInput = scanner.nextInt();
