@@ -3,9 +3,12 @@ import java.util.List;
 
 public class PacketBlock {
     private final int blockSize = 4;
-    private List<List<byte[]>> block = new ArrayList<>();
+    private final List<List<byte[]>> block = new ArrayList<>();
     private int currentBlock = 0;
 
+    /**
+     * Interleaves packets within the block.
+     */
     public void interleavePackets() {
         List<List<byte[]>> interleavedBlock = new ArrayList<>();
         for (int i = 0; i < blockSize; i++) {
@@ -16,20 +19,22 @@ public class PacketBlock {
                 interleavedBlock.get(i).add(block.get(i));
             }
         }
-        block = interleavedBlock;
-
+        block.clear();
+        block.addAll(interleavedBlock);
     }
 
+    /**
+     * Adds a packet to the block and interleaves if the block is full.
+     * @param packetData The data of the packet to add
+     * @return True if the block is full after adding the packet, false otherwise
+     */
     public boolean addPacketToBlock(byte[] packetData) {
-        // Add packet to PacketBlock
         if (block.isEmpty()) {
             block.add(new ArrayList<>());
         }
         block.get(currentBlock).add(packetData);
 
-        // If the block is full, create a new block
         if (block.get(currentBlock).size() == blockSize) {
-            // Check if the block is full
             if (block.size() == blockSize) {
                 interleavePackets();
                 return true;

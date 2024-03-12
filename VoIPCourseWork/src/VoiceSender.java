@@ -1,7 +1,5 @@
 import CMPC3M06.AudioRecorder;
-import uk.ac.uea.cmp.voip.DatagramSocket2;
-import uk.ac.uea.cmp.voip.DatagramSocket3;
-import uk.ac.uea.cmp.voip.DatagramSocket4;
+import uk.ac.uea.cmp.voip.*;
 
 import javax.sound.sampled.LineUnavailableException;
 import java.io.IOException;
@@ -14,13 +12,14 @@ import java.nio.ByteBuffer;
 public class VoiceSender implements Runnable {
 
     private final int socketNum;
+    private final PacketWrapper dummyPacket;
     int port;
     InetAddress ip;
     DatagramSocket sendingSocket;
 
     int sequenceNumber = 0;
     
-    double tempTime = 200;
+    double tempTime = 999;
     long elapsedTime = System.currentTimeMillis();
 
     private final DiffieHellman dh;
@@ -34,7 +33,6 @@ public class VoiceSender implements Runnable {
 
 
         try {
-            // Initialize the DatagramSocket based on the socket number
             switch (socketNumber) {
                 case 2 -> sendingSocket = new DatagramSocket2();
                 case 3 -> sendingSocket = new DatagramSocket3();
@@ -43,11 +41,9 @@ public class VoiceSender implements Runnable {
             }
         } catch (SocketException e) {
             System.out.println("ERROR: TextSender: Could not open UDP socket to send from.");
-            e.printStackTrace();
             System.exit(0);
         }
 
-        // Create and run the thread when class is made
         Thread thread = new Thread(this);
         thread.start();
     }
@@ -64,13 +60,11 @@ public class VoiceSender implements Runnable {
 
             while (running) {
                 
-                // Network Analysis
                 elapsedTime = System.currentTimeMillis() - startTime;
                 if (elapsedTime > tempTime * 1000) {
                     running = false;
                 }
 
-                // Packet Creation
                 byte[] block = recorder.getBlock();
                 byte[] encodedData;
                 if (socketNum == 4) {
@@ -92,7 +86,7 @@ public class VoiceSender implements Runnable {
             }
 
             System.out.printf("Packets Sent: %d. %n", sequenceNumber);
-            System.out.println("Bitrate: " + (sequenceNumber * 612L / (elapsedTime / 1000)));
+            System.out.println("Bitrate: " + ((long) sequenceNumber * dummyPacket.calculatePacketSize() / (elapsedTime / 1000)));
 
         } catch (LineUnavailableException | IOException e) {
             throw new RuntimeException(e);
@@ -114,14 +108,18 @@ public class VoiceSender implements Runnable {
 
         return unwrapEncrypt.array();
     }
-    
+
+    /**
+     * Creates a voice packet with the provided encrypted data.
+     * @param encryptedData The encrypted data to be included in the packet
+     * @return The byte array representing the voice packet
+     */
     private byte[] createPacket(byte[] encryptedData){
         long timestamp = System.currentTimeMillis();
         HeaderWrapper headerWrapper = new HeaderWrapper(timestamp, sequenceNumber);
         PacketWrapper packetWrapper = new PacketWrapper(headerWrapper, encryptedData);
 
         int size = packetWrapper.calculatePacketSize();
-        // Creating a ByteBuffer for the voice packet
         ByteBuffer voicePacket = ByteBuffer.allocate(size);
 
         voicePacket.putShort(headerWrapper.getAuthenticationNumber());
@@ -132,13 +130,23 @@ public class VoiceSender implements Runnable {
 
         return voicePacket.array();
     }
-    
+
+    /**
+     * Sends the packet block over the network.
+     * @param packetBlock The packet block to be sent
+     * @throws IOException If an I/O error occurs while sending the packet block
+     */
     private void sendPacketBlock(PacketBlock packetBlock) throws IOException {
         for (byte[] packetData : packetBlock.getPackets()) {
             sendPacket(packetData);
         }
     }
 
+    /**
+     * Sends a single packet over the network.
+     * @param packetData The byte array representing the packet to be sent
+     * @throws IOException If an I/O error occurs while sending the packet
+     */
     private void sendPacket(byte[] packetData) throws IOException {
         DatagramPacket packet = new DatagramPacket(packetData, packetData.length, ip, port);
         sendingSocket.send(packet);

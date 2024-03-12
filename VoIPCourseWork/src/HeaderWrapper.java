@@ -11,11 +11,12 @@ public class HeaderWrapper {
     public HeaderWrapper(long timestamp, int sequenceNumber) {
         this.timestamp = timestamp;
         this.sequenceNumber = sequenceNumber;
-        byteMap.put("timestamp",8);
-        byteMap.put("sequenceNumber",4);
-        byteMap.put("authenticationNumber",2);
+        byteMap.put("timestamp", 8);
+        byteMap.put("sequenceNumber", 4);
+        byteMap.put("authenticationNumber", 2);
     }
 
+    // Getters
     public long getTimestamp() {
         return timestamp;
     }
@@ -28,8 +29,11 @@ public class HeaderWrapper {
         return authenticationNumber;
     }
 
+    /**
+     * Calculates the total size of the header in bytes.
+     * @return The total size of the header in bytes
+     */
     public int calculateHeaderSize() {
         return byteMap.get("timestamp") + byteMap.get("sequenceNumber") + byteMap.get("authenticationNumber");
-
     }
 }

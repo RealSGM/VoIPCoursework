@@ -2,15 +2,16 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Scanner;
 
+/**
+ * VoiceDuplex class manages the main functionality for a voice duplex system.
+ */
 public class VoiceDuplex {
-
-    // Initialize variables
-    static InetAddress clientIP = null;
-    static int port = 55555;
-    static Scanner scanner = new Scanner(System.in);
-    static int socketNum = 2;
-
     public static void main(String[] args) throws UnknownHostException {
+        // Initialize variables
+        int socketNum = 1;
+//        Scanner scanner = new Scanner(System.in);
+//        InetAddress clientIP = getValidIPAddress(scanner);
+//        int port = getValidPORT(scanner);
 
          //Get valid IP address and port from user
         clientIP = getValidIPAddress();
@@ -54,13 +55,11 @@ public class VoiceDuplex {
             }
 
             try {
-                tempIP = InetAddress.getByName(ipString);
-
+                return InetAddress.getByName(ipString);
             } catch (UnknownHostException e) {
                 System.out.println("ERROR: Invalid IP Address");
             }
         }
-        return tempIP;
     }
 
     // Method to get a valid port number from the user
@@ -84,13 +83,11 @@ public class VoiceDuplex {
             }
 
             try {
-                tempPort = Integer.parseInt(portString);
-
+                return Integer.parseInt(portString);
             } catch (NumberFormatException e) {
                 System.out.println("ERROR: Invalid port Entered.");
             }
         }
-        return tempPort;
     }
 
     //Get valid socket number

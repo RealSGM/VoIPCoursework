@@ -1,5 +1,3 @@
-import javax.print.attribute.standard.DateTimeAtCompleted;
-
 public class Hamming74 {
     static int counter = 0;
     static int counter2 = 0;

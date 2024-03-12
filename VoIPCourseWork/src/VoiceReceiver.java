@@ -9,14 +9,14 @@ import java.net.SocketException;
 import java.nio.ByteBuffer;
 
 public class VoiceReceiver implements Runnable {
+    private final PacketWrapper dummyPacket;
     private DatagramSocket receivingSocket;
     private final VoiceProcessor processor;
-    private Thread processorThread;
-    private final int socketNum;
+    private final Thread processorThread;
 
-    public VoiceReceiver(int clientPORT, int socketNumber, VoiceProcessor processorInstance) {
+    public VoiceReceiver(int clientPORT, int socketNumber, VoiceProcessor processorInstance, PacketWrapper dummy) {
         this.processor = processorInstance;
-        this.socketNum = socketNumber;
+        this.dummyPacket = dummy;
 
         try {
             switch (socketNumber) {
@@ -27,15 +27,12 @@ public class VoiceReceiver implements Runnable {
             }
         } catch (SocketException e) {
             System.out.println("ERROR: VoiceReceiver: Could not open UDP socket to receive.");
-            e.printStackTrace();
             System.exit(0);
         }
 
-        // Start the receiver thread
         Thread receiverThread = new Thread(this);
         receiverThread.start();
 
-        // Start the processor thread
         processorThread = new Thread(processor);
         processorThread.start();
     }
@@ -43,19 +40,13 @@ public class VoiceReceiver implements Runnable {
     @Override
     public void run() {
         boolean running = true;
-        HeaderWrapper dummyHeader = new HeaderWrapper(1L, 1);
-        PacketWrapper dummyPacket = new PacketWrapper(dummyHeader, new byte[PacketWrapper.dataSize]);
         int packetSize = dummyPacket.calculatePacketSize();
-        if (socketNum == 4){
-            packetSize = 1038;
-        }
 
         while (running) {
             byte[] encryptedBlock = new byte[packetSize];
             DatagramPacket packet = new DatagramPacket(encryptedBlock, encryptedBlock.length);
 
             try {
-                // Receive the packet
                 receivingSocket.receive(packet);
                 ByteBuffer buffer = ByteBuffer.wrap(packet.getData(), packet.getOffset(), packet.getLength());
                 decodeBuffer(buffer);
@@ -68,13 +59,12 @@ public class VoiceReceiver implements Runnable {
         processorThread.interrupt();
     }
 
-    public void decodeBuffer(ByteBuffer buffer){
+    private void decodeBuffer(ByteBuffer buffer){
         short authKey = buffer.getShort();
         int sequenceNumber = buffer.getInt();
         long timestamp = buffer.getLong();
         HeaderWrapper headerWrapper = new HeaderWrapper(timestamp, sequenceNumber);
 
-        // Check authentication key
         if (authKey == headerWrapper.getAuthenticationNumber()) {
             byte[] remainingBytes = new byte[buffer.remaining()];
             buffer.get(remainingBytes);
