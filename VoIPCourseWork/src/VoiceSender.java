@@ -18,17 +18,16 @@ public class VoiceSender implements Runnable {
     DatagramSocket sendingSocket;
 
     int sequenceNumber = 0;
-    
     double tempTime = 999;
     long elapsedTime = System.currentTimeMillis();
-
     private final DiffieHellman dh;
     private long shared_key;
     
-    public VoiceSender(InetAddress clientIP, int clientPORT, int socketNumber, DiffieHellman dh) {
+    public VoiceSender(InetAddress clientIP, int clientPORT, int socketNumber, PacketWrapper dummyPacket, DiffieHellman dh) {
         this.ip = clientIP;
         this.port = clientPORT;
         this.socketNum = socketNumber;
+        this.dummyPacket = dummyPacket;
         this.dh = dh;
 
 
@@ -47,7 +46,6 @@ public class VoiceSender implements Runnable {
         Thread thread = new Thread(this);
         thread.start();
     }
-
 
     @Override
     public void run() {
@@ -95,7 +93,7 @@ public class VoiceSender implements Runnable {
     
     public byte[] encryptData(byte[] block) {
         // Initializing ByteBuffer for encryption
-        long encryptionKey = this.getShared_key();
+        long encryptionKey = this.getSharedKey();
 
         ByteBuffer unwrapEncrypt = ByteBuffer.allocate(block.length);
         ByteBuffer plainText = ByteBuffer.wrap(block);
@@ -160,7 +158,7 @@ public class VoiceSender implements Runnable {
         this.shared_key = this.dh.generateSecretKey(otherPublicKey);
     }
 
-    public long getShared_key(){
+    public long getSharedKey(){
         return this.shared_key;
     }
 

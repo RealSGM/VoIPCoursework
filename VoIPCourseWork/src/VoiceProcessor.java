@@ -18,8 +18,12 @@ public class VoiceProcessor implements Runnable {
     private final DiffieHellman dh;
     private long shared_key;
 
-    public VoiceProcessor(int socket, DiffieHellman dh) {
+    public VoiceProcessor(int socket, PacketWrapper dummyPacket, DiffieHellman dh) {
         this.socketNum = socket;
+        this.dummyPacket = dummyPacket;
+        this.packetSize = dummyPacket.calculatePacketSize();
+        this.minPacketCount = socketNum == 3 ? 16 : 2;
+
         this.dh = dh;
     }
 
