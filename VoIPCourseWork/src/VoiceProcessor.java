@@ -48,6 +48,28 @@ public class VoiceProcessor implements Runnable {
                              decodePacket(interpolatedPacket, decoder);
                          }
                      }
+                     if (socketNum == 3) {
+                         Map.Entry<Integer, PacketWrapper> secondEntry = packetBuffer.firstEntry();
+                         PacketWrapper secondPacket = secondEntry.getValue();
+                         // Check for delayed packets and interpolate if necessary
+                         long delay = secondPacket.header().getTimestamp() - firstPacket.header().getTimestamp();
+                         if (secondPacket.header().getTimestamp() - firstPacket.header().getTimestamp() > 200) {
+                             byte[] interpolatedData = interpolateDelayedPacketData(firstPacket, secondPacket,delay);
+                             PacketWrapper interpolatedPacket = new PacketWrapper(secondPacket.header(), interpolatedData);
+                             decodePacket(interpolatedPacket, decoder);
+                         }
+                     }
+                     // Inside the while loop of the run() method in VoiceProcessor
+                     if (socketNum == 3) {
+                         Map.Entry<Integer, PacketWrapper> secondEntry = packetBuffer.firstEntry();
+                         PacketWrapper secondPacket = secondEntry.getValue();
+                         // Check for missing packets and handle accordingly
+                         if (secondPacket.header().getTimestamp() - firstPacket.header().getTimestamp() > 200) {
+                             byte[] missingPacketData = generateSilence(); // Implement this method
+                             PacketWrapper missingPacket = new PacketWrapper(firstPacket.header(), missingPacketData);
+                             decodePacket(missingPacket, decoder);
+                         }
+                     }
 
                  } catch (IOException e) {
                      throw new RuntimeException(e);
@@ -62,6 +84,11 @@ public class VoiceProcessor implements Runnable {
         } catch (LineUnavailableException e) {
             throw new RuntimeException("Error initializing AudioPlayer", e);
         }
+    }
+    private byte[] generateSilence() {
+        int dataSize = dummyPacket.calculatePacketSize();
+        byte[] silenceData = new byte[dataSize];
+        return silenceData;
     }
 
     /**
@@ -82,7 +109,26 @@ public class VoiceProcessor implements Runnable {
 
         return interpolatedData;
     }
+    /**
+     * Interpolates the data between two delayed packet wrappers.
+     * @param firstPacket  The first PacketWrapper object.
+     * @param secondPacket The second PacketWrapper object.
+     * @param delay        The delay in milliseconds.
+     * @return The interpolated data as a byte array.
+     */
+    private byte[] interpolateDelayedPacketData(PacketWrapper firstPacket, PacketWrapper secondPacket, long delay) {
+        byte[] firstData = firstPacket.data();
+        byte[] secondData = secondPacket.data();
+        int dataSize = dummyPacket.data().length;
 
+        // Calculate the ratio based on the delay
+        double ratio = (double) delay / 200;
+        byte[] interpolatedData = new byte[dataSize];
+        for (int i = 0; i < dataSize; i++) {
+            interpolatedData[i] = (byte) ((1 - ratio) * firstData[i] + ratio * secondData[i]);
+        }
+        return interpolatedData;
+    }
     public void addToBuffer(PacketWrapper packetWrapper) {
         packetBuffer.put(packetWrapper.header().getSequenceNumber(), packetWrapper);
     }
@@ -99,6 +145,7 @@ public class VoiceProcessor implements Runnable {
         for (int j = 0; j < encryptedData.length / 4; j++) {
             int fourByte = cipherText.getInt();
             int encryptionKey = (int) this.getShared_key();
+            System.out.println(this.getShared_key());
             fourByte = fourByte ^ encryptionKey; // XOR decrypt
             unwrapDecrypt.putInt(fourByte);
         }
@@ -113,8 +160,12 @@ public class VoiceProcessor implements Runnable {
      */
     private void decodePacket(PacketWrapper packet, CyclicRedundancyCheck decoder) throws IOException {
         byte[] decryptedPacket = decryptAudio(packet.data());
-        byte[] decodedPacket = decoder.decode(decryptedPacket);
-        processAudio(decodedPacket);
+        if (socketNum == 4) {
+            byte[] decodedPacket = decoder.decode(decryptedPacket);
+            processAudio(decodedPacket);
+        } else {
+            processAudio(decryptedPacket);
+        }
     }
 
     /**
