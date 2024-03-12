@@ -12,16 +12,25 @@ public class VoiceDuplex {
 
     public static void main(String[] args) throws UnknownHostException {
 
-        // Get valid IP address and port from user
-//        clientIP = getValidIPAddress();
-//        port = getValidPORT();
-        clientIP = InetAddress.getLocalHost();
-        port = 55555;
+         //Get valid IP address and port from user
+        clientIP = getValidIPAddress();
+        port = getValidPORT();
+//        clientIP = InetAddress.getLocalHost();
+//        port = 55555;
+
+        DiffieHellman dh = new DiffieHellman();
 
         // Initialize VoiceProcessor, VoiceSender, and VoiceReceiver
-        VoiceProcessor processor =  new VoiceProcessor(socketNum);
-        new VoiceSender(clientIP, port, socketNum);
+        VoiceProcessor processor =  new VoiceProcessor(socketNum, dh);
+        VoiceSender sender = new VoiceSender(clientIP, port, socketNum, dh);
         new VoiceReceiver(port, socketNum, processor);
+
+        long senderPublicKey = sender.sendPublicKey();
+        long receiverPublicKey = processor.sendPublicKey();
+
+        sender.receivePublicKey(receiverPublicKey);
+        processor.receivePublicKey(senderPublicKey);
+
     }
 
     // Method to get a valid IP address from the user

@@ -20,13 +20,18 @@ public class VoiceSender implements Runnable {
 
     int sequenceNumber = 0;
     
-    double tempTime = 20;
+    double tempTime = 200;
     long elapsedTime = System.currentTimeMillis();
+
+    private final DiffieHellman dh;
+    private long shared_key;
     
-    public VoiceSender(InetAddress clientIP, int clientPORT, int socketNumber) {
+    public VoiceSender(InetAddress clientIP, int clientPORT, int socketNumber, DiffieHellman dh) {
         this.ip = clientIP;
         this.port = clientPORT;
         this.socketNum = socketNumber;
+        this.dh = dh;
+
 
         try {
             // Initialize the DatagramSocket based on the socket number
@@ -46,6 +51,7 @@ public class VoiceSender implements Runnable {
         Thread thread = new Thread(this);
         thread.start();
     }
+
 
     @Override
     public void run() {
@@ -90,14 +96,14 @@ public class VoiceSender implements Runnable {
     
     public byte[] encryptData(byte[] block) {
         // Initializing ByteBuffer for encryption
-        int encryptionKey = 15;
+        long encryptionKey = this.getShared_key();
 
         ByteBuffer unwrapEncrypt = ByteBuffer.allocate(block.length);
         ByteBuffer plainText = ByteBuffer.wrap(block);
 
         for (int j = 0; j < block.length / 4; j++) {
             int fourByte = plainText.getInt();
-            fourByte = fourByte ^ encryptionKey; // XOR operation with key
+            fourByte = fourByte ^ (int) encryptionKey; // XOR operation with key
             unwrapEncrypt.putInt(fourByte);
         }
 
@@ -132,4 +138,17 @@ public class VoiceSender implements Runnable {
         DatagramPacket packet = new DatagramPacket(packetData, packetData.length, ip, port);
         sendingSocket.send(packet);
     }
+
+    public long sendPublicKey(){
+        return this.dh.getPublic_key();
+    }
+
+    public void receivePublicKey(long otherPublicKey) {
+        this.shared_key = this.dh.generateSecretKey(otherPublicKey);
+    }
+
+    public long getShared_key(){
+        return this.shared_key;
+    }
+
 }
