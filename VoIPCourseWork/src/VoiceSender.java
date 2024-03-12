@@ -72,7 +72,12 @@ public class VoiceSender implements Runnable {
 
                 // Packet Creation
                 byte[] block = recorder.getBlock();
-                byte[] encodedData = encoder.encode(block);
+                byte[] encodedData;
+                if (socketNum == 4) {
+                     encodedData = encoder.encode(block);
+                }else {
+                    encodedData = block;
+                }
                 byte[] encryptedData = encryptData(encodedData);
                 byte[] encryptedPacket = createPacket(encryptedData);
 

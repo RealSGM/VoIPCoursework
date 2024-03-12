@@ -42,7 +42,12 @@ public class VoiceProcessor implements Runnable {
                          Map.Entry<Integer, PacketWrapper> secondEntry = packetBuffer.firstEntry(); // Take and remove the first packet from the buffer
                          PacketWrapper secondPacket = secondEntry.getValue();
                          if (secondPacket.getHeader().getTimestamp() - firstPacket.getHeader().getTimestamp() > 32){
-                             decodePacket(secondPacket, decoder);
+                             if (socketNum == 4) {
+                                 decodePacket(secondPacket, decoder);
+                             } else {
+                                 byte[] decryptedPacket = decryptAudio(secondPacket.data());
+                                 processAudio(decryptedPacket);
+                             }
                          }
                      }
 

@@ -15,6 +15,7 @@ public class VoiceDuplex {
          //Get valid IP address and port from user
         clientIP = getValidIPAddress();
         port = getValidPORT();
+        socketNum = getSocketNum();
 //        clientIP = InetAddress.getLocalHost();
 //        port = 55555;
 
@@ -39,12 +40,17 @@ public class VoiceDuplex {
 
         // Loop until a valid IP address is entered
         while (tempIP == null) {
-            System.out.print("Enter IP: ");
-            String ipString = scanner.next();
+            System.out.print("Enter IP (default:localhost): ");
+            String ipString = scanner.nextLine();
 
             // Exit if user enters 'E'
             if (ipString.equalsIgnoreCase("E")) {
                 System.exit(0);
+            }
+
+            // Set the IP address to localhost if the input is empty
+            if (ipString == "") {
+                ipString = "localhost";
             }
 
             try {
@@ -64,12 +70,17 @@ public class VoiceDuplex {
 
         // Loop until a valid port number is entered
         while (tempPort == -1){
-            System.out.print("Enter PORT: ");
-            String portString = scanner.next();
+            System.out.print("Enter PORT (default:5555): ");
+            String portString = scanner.nextLine();
 
             // Exit if user enters 'E'
             if (portString.equalsIgnoreCase("E")){
                 System.exit(0);
+            }
+
+            // Sets the port string to 5555 if empty
+            if (portString == "") {
+                portString = "5555";
             }
 
             try {
@@ -81,4 +92,25 @@ public class VoiceDuplex {
         }
         return tempPort;
     }
+
+    //Get valid socket number
+    public static int getSocketNum() {
+        Scanner scanner = new Scanner(System.in);
+        int userInput;
+        do {
+            System.out.print("Please enter a socket (1,2,3,4): ");
+            while (!scanner.hasNextInt()) {
+                System.out.print("Invalid input. Please enter a valid socket(1,2,3,4): ");
+                scanner.next(); // Consume the invalid input
+            }
+            userInput = scanner.nextInt();
+
+            if (userInput < 1 || userInput > 4) {
+                System.out.print("Invalid input. Please enter a socket(1,2,3,4): ");
+            }
+        } while (userInput < 1 || userInput > 4);
+
+        return userInput;
+    }
 }
+
