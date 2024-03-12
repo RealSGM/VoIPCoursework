@@ -20,7 +20,7 @@ public class VoiceSender implements Runnable {
 
     int sequenceNumber = 0;
     
-    double tempTime = 20;
+    double tempTime = 200;
     long elapsedTime = System.currentTimeMillis();
 
     private final DiffieHellman dh;

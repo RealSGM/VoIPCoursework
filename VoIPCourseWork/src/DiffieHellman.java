@@ -1,42 +1,18 @@
 import java.util.Random;
 
 public class DiffieHellman {
-    public long P, G;
+    public final long P = 1125899839733759L;
+    public final long G = 179424691L;
     private final long private_key, public_key;
 
-    public DiffieHellman(long P, long G){
-      this.P = P; //GeneratePrimeLong(); // Large Prime Number
+    public DiffieHellman(){
         Random random = new Random();
-//      this.G = random.nextLong(BOUND); // Primitive root modulo p
-        this.G = G;
       this.private_key = random.nextLong(this.P); // Private Key
       this.public_key = generateKey(this.G, this.private_key, this.P);
-//    this.b = new Random().nextLong(BOUND);
     }
 
     public long getPublic_key() {
         return public_key;
-    }
-
-    public boolean isPrime(long num){
-        int n = (int)num;
-        if (num <=1){
-            return false;
-        }
-        for (int i = 2; i <= Math.sqrt(n); i++){
-            if (num % i == 0){
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private long GeneratePrimeLong(){
-        long randomPrime;
-        do {
-            randomPrime = new Random().nextLong();
-        } while (!isPrime(randomPrime));
-        return randomPrime;
     }
 
 
@@ -60,10 +36,9 @@ public class DiffieHellman {
 
     public static void main(String[] args) {
 
-        long P = 1125899839733759L;
-        long G = 179424691L;
 
-        DiffieHellman dh = new DiffieHellman(P, G);
+
+        DiffieHellman dh = new DiffieHellman();
         SenderKey sender = new SenderKey(dh);
         long senderPublicKey = sender.sendPublicKey();
 
@@ -92,6 +67,7 @@ class SenderKey{
 
     public void receivePublicKey(long otherPublicKey) {
         this.shared_key = this.dh.generateSecretKey(otherPublicKey);
+        System.out.println(shared_key);
     }
 
     public long getShared_key(){
@@ -113,6 +89,7 @@ class ReceiverKey {
 
     public void receivePublicKey(long otherPublicKey) {
         this.shared_key = this.dh.generateSecretKey(otherPublicKey);
+        System.out.println(shared_key);
     }
 
     public long getShared_key() {

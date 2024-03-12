@@ -8,19 +8,17 @@ public class VoiceDuplex {
     static InetAddress clientIP = null;
     static int port = 55555;
     static Scanner scanner = new Scanner(System.in);
-    static int socketNum = 4;
-    static long P = 1125899839733759L;
-    static long G = 179424691L;
+    static int socketNum = 1;
 
     public static void main(String[] args) throws UnknownHostException {
 
-        // Get valid IP address and port from user
-//        clientIP = getValidIPAddress();
-//        port = getValidPORT();
-        clientIP = InetAddress.getLocalHost();
-        port = 55555;
+         //Get valid IP address and port from user
+        clientIP = getValidIPAddress();
+        port = getValidPORT();
+//        clientIP = InetAddress.getLocalHost();
+//        port = 55555;
 
-        DiffieHellman dh = new DiffieHellman(P,G);
+        DiffieHellman dh = new DiffieHellman();
 
         // Initialize VoiceProcessor, VoiceSender, and VoiceReceiver
         VoiceProcessor processor =  new VoiceProcessor(socketNum, dh);
