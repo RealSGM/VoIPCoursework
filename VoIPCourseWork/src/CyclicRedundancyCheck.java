@@ -1,7 +1,7 @@
 public class CyclicRedundancyCheck {
 
     private static final int DIVISOR = 0b10011;
-
+    private static int counter = 0;
     private int computeCRC(int data) {
         int intData = data & 0xFF;
         int crc = intData << 4;
@@ -63,8 +63,14 @@ public class CyclicRedundancyCheck {
     private byte decodeByte(byte data){
         boolean hasError = checkForErrors(data);
         if (hasError) {
+            counter = 4;
             return (byte) 0x00;
+
         } else {
+            if (counter > 0){
+                counter--;
+                return (byte) 0x00;
+            }
             return (byte) ((data >>> 4) & 0x0F);
         }
     }
