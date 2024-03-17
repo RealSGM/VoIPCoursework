@@ -2,7 +2,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PacketBlock {
-    private final int blockSize = 4;
+    public static final int blockSize = 2;
     private final List<List<byte[]>> block = new ArrayList<>();
     private int currentBlock = 0;
 

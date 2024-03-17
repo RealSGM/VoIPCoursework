@@ -15,12 +15,14 @@ public class VoiceSender implements Runnable {
     final PacketWrapper dummyPacket;
     int port;
     InetAddress ip;
+    private final DiffieHellman dh;
+
     DatagramSocket sendingSocket;
 
     int sequenceNumber = 0;
-    double tempTime = 999;
+    double tempTime = 10;
     long elapsedTime = System.currentTimeMillis();
-    private final DiffieHellman dh;
+
     private long shared_key;
 
     public VoiceSender(InetAddress clientIP, int clientPORT, int socketNumber, PacketWrapper dummyPacket, DiffieHellman dh) {
@@ -86,7 +88,7 @@ public class VoiceSender implements Runnable {
             }
 
             System.out.printf("Packets Sent: %d. %n", sequenceNumber);
-            System.out.println("Bitrate: " + ((long) sequenceNumber * dummyPacket.calculatePacketSize() / (elapsedTime / 1000)));
+            System.out.println("Bitrate: " + ((long) sequenceNumber * dummyPacket.calculatePacketSize() * 8 / (elapsedTime / 1000)));
 
         } catch (LineUnavailableException | IOException e) {
             throw new RuntimeException(e);
@@ -126,8 +128,9 @@ public class VoiceSender implements Runnable {
         voicePacket.putInt(headerWrapper.getSequenceNumber());
         voicePacket.putLong(timestamp);
         voicePacket.put(encryptedData);
-        sequenceNumber++;
 
+//        System.out.println(sequenceNumber+ " created at " + timestamp);
+        sequenceNumber++;
         return voicePacket.array();
     }
 

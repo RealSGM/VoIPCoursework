@@ -22,7 +22,7 @@ public class VoiceProcessor implements Runnable {
         this.socketNum = socket;
         this.dummyPacket = dummyPacket;
         this.packetSize = dummyPacket.calculatePacketSize();
-        this.minPacketCount = socketNum == 3 ? 16 : 2;
+        this.minPacketCount = socketNum == 3 ? (int) Math.pow(PacketBlock.blockSize, 2) : 2;
 
         this.dh = dh;
     }
@@ -147,6 +147,7 @@ public class VoiceProcessor implements Runnable {
      */
     private void decodePacket(PacketWrapper packet, CyclicRedundancyCheck decoder) throws IOException {
         byte[] decryptedPacket = decryptAudio(packet.data());
+//        System.out.println(packet.header().getSequenceNumber() + " received at " + System.currentTimeMillis());
         if (socketNum == 4) {
             byte[] decodedPacket = decoder.decode(decryptedPacket);
             processAudio(decodedPacket);
